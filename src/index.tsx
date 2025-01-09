@@ -29,52 +29,20 @@ const add = callable<[first: number, second: number], number>("add");
 const startTimer = callable<[], void>("start_timer");
 
 function Content() {
-  const [result, setResult] = useState<number | undefined>();
-
-  const onClick = async () => {
-    const result = await add(Math.random(), Math.random());
-    setResult(result);
-  };
-
   return (
-    <PanelSection title="Panel Section">
-      <PanelSectionRow>
-        <ButtonItem
-          layout="below"
-          onClick={onClick}
-        >
-          {result ?? "Add two numbers via Python"}
-        </ButtonItem>
-      </PanelSectionRow>
-      <PanelSectionRow>
-        <ButtonItem
-          layout="below"
-          onClick={() => startTimer()}
-        >
-          {"Start Python timer"}
-        </ButtonItem>
-      </PanelSectionRow>
-
-      {/* <PanelSectionRow>
-        <div style={{ display: "flex", justifyContent: "center" }}>
-          <img src={logo} />
-        </div>
-      </PanelSectionRow> */}
-
-      {/*<PanelSectionRow>
-        <ButtonItem
-          layout="below"
-          onClick={() => {
-            Navigation.Navigate("/decky-plugin-test");
-            Navigation.CloseSideMenus();
-          }}
-        >
-          Router
-        </ButtonItem>
-      </PanelSectionRow>*/}
-    </PanelSection>
+    <div style={{ width: "100%", height: "100%" }}>
+      <iframe
+        src="https://example.com" // Replace with your desired URL
+        style={{
+          width: "100%",
+          height: "100%",
+          border: "none",
+        }}
+        title="WebPage Viewer"
+      ></iframe>
+    </div>
   );
-};
+}
 
 export default definePlugin(() => {
   console.log("Template plugin initializing, this is called once on frontend startup")
