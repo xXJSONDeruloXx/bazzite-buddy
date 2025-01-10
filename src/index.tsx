@@ -9,7 +9,7 @@ function Content() {
         src="https://github.com/ublue-os/bazzite/releases/" // Replace with your desired URL
         style={{
           width: "100%",
-          height: "100%",
+          height: "100vh",
           border: "none",
         }}
         title="WebPage Viewer"
