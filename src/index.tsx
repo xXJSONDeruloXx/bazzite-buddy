@@ -1,5 +1,6 @@
 import { definePlugin } from "decky-frontend-lib";
 import React from "react";
+import { FaGlobe } from "react-icons/fa"; // Example icon
 
 function Content() {
   return (
@@ -20,6 +21,8 @@ function Content() {
 export default definePlugin(() => {
   return {
     name: "WebPage Viewer",
+    title: <div>WebPage Viewer</div>, // Title shown in Decky
+    icon: <FaGlobe />,                // Icon for the plugin
     content: <Content />,
     onDismount() {},
   };
