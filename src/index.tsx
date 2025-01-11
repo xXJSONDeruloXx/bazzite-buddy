@@ -18,53 +18,41 @@ function Content() {
       if (fs.existsSync(filePath)) {
         const data = fs.readFileSync(filePath, "utf8");
         const json = JSON.parse(data);
-        setVersion(json.version); // Extract version
+        console.log("Version info:", json);
+        setVersion(json.version || "unknown");
       } else {
-        setError("Version info file not found.");
+        throw new Error("Version info file not found.");
       }
     } catch (err) {
-      console.error("Error reading version info file:", err);
-      setError("Failed to read version info.");
+      console.error("Error accessing version info:", err);
+      setVersion("unknown");
     }
   };
 
   // Function to fetch changelog based on version
   const fetchChangelog = (version: string) => {
     const url = `https://api.github.com/repos/ublue-os/bazzite/releases/tags/${version}`;
+    console.log("Fetching changelog from:", url);
 
-    const controller = new AbortController();
-    const signal = controller.signal;
-
-    const getChangelog = async () => {
-      try {
-        const response = await fetch(url, {
-          headers: {
-            Accept: "application/vnd.github.v3+json",
-          },
-          signal,
-        });
-
+    fetch(url, {
+      headers: {
+        Accept: "application/vnd.github.v3+json",
+      },
+    })
+      .then((response) => {
         if (!response.ok) {
-          throw new Error(`Failed to fetch: ${response.statusText}`);
+          throw new Error(`Failed to fetch changelog: ${response.statusText}`);
         }
-
-        const data = await response.json();
-        setChangelog(data.body);
-      } catch (err) {
-        if (err instanceof DOMException && err.name === "AbortError") return;
-        const errorMessage =
-          err instanceof Error
-            ? err.message
-            : "An unknown error occurred while fetching the changelog.";
-        setError(errorMessage);
-      }
-    };
-
-    getChangelog();
-
-    return () => {
-      controller.abort(); // Cleanup on unmount
-    };
+        return response.json();
+      })
+      .then((data) => {
+        console.log("Changelog data:", data);
+        setChangelog(data.body || "No changelog available.");
+      })
+      .catch((error) => {
+        console.error("Error fetching changelog:", error);
+        setError("Failed to fetch changelog.");
+      });
   };
 
   useEffect(() => {
@@ -72,7 +60,7 @@ function Content() {
   }, []);
 
   useEffect(() => {
-    if (version) {
+    if (version && version !== "unknown") {
       fetchChangelog(version); // Fetch changelog after version is fetched
     }
   }, [version]);
