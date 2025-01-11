@@ -14,6 +14,9 @@ importers:
       decky-frontend-lib:
         specifier: ^3.25.0
         version: 3.25.0
+      marked:
+        specifier: ^15.0.6
+        version: 15.0.6
       react:
         specifier: ^19.0.0
         version: 19.0.0
@@ -713,6 +716,11 @@ packages:
 
   magic-string@0.30.17:
     resolution: {integrity: sha512-sNPKHvyjVf7gyjwS4xGTaW/mCnF8wnjtifKBEhxfZ7E/S8tQ0rssrwGNn6q8JH/ohItJfSQp9mBtQYuTlH5QnA==}
+
+  marked@15.0.6:
+    resolution: {integrity: sha512-Y07CUOE+HQXbVDCGl3LXggqJDbXDP2pArc2C1N1RRMN0ONiShoSsIInMd5Gsxupe7fKLpgimTV+HOJ9r7bA+pg==}
+    engines: {node: '>= 18'}
+    hasBin: true
 
   merge-anything@6.0.2:
     resolution: {integrity: sha512-U8x6DL/YVudOcf82B6hd8GFg+6gF6hEHYwzqdo67GrH6vnDZ5YBq6BYX3hHWyCnG3CcqJDB1a9tj9fzMI3RL9Q==}
@@ -1652,6 +1660,8 @@ snapshots:
   magic-string@0.30.17:
     dependencies:
       '@jridgewell/sourcemap-codec': 1.5.0
+
+  marked@15.0.6: {}
 
   merge-anything@6.0.2:
     dependencies:

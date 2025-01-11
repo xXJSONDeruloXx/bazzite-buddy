@@ -57,6 +57,21 @@ function Content() {
       }}
     >
       <h2>Bazzite Release Notes</h2>
+      <button
+        style={{
+          padding: "10px 20px",
+          marginBottom: "15px",
+          backgroundColor: "#0078D7",
+          color: "#ffffff",
+          border: "none",
+          borderRadius: "5px",
+          cursor: "pointer",
+          fontSize: "16px",
+        }}
+        onClick={() => window.open("https://github.com/ublue-os/bazzite/releases", "_blank")}
+      >
+        View All Release Notes
+      </button>
       {error ? (
         <p style={{ color: "red" }} aria-live="polite">
           {error}
