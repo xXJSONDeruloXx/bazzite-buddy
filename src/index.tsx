@@ -1,35 +1,87 @@
 import { definePlugin } from "decky-frontend-lib";
-import React from "react";
-import { FaGlobe } from "react-icons/fa"; // Example icon
+import React, { useEffect, useState } from "react";
+import { FaClipboardList } from "react-icons/fa";
 
 function Content() {
+  const [changelog, setChangelog] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const url =
+      "https://api.github.com/repos/ublue-os/bazzite/releases/tags/41.20250106.2";
+    const controller = new AbortController();
+    const signal = controller.signal;
+
+    const fetchChangelog = async () => {
+      try {
+        const response = await fetch(url, {
+          headers: {
+            Accept: "application/vnd.github.v3+json",
+          },
+          signal,
+        });
+
+        if (!response.ok) {
+          throw new Error(`Failed to fetch: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        setChangelog(data.body);
+      } catch (err) {
+        if (err instanceof DOMException && err.name === "AbortError") return;
+        const errorMessage =
+          err instanceof Error
+            ? err.message
+            : "An unknown error occurred while fetching the changelog.";
+        setError(errorMessage);
+      }
+    };
+
+    fetchChangelog();
+
+    return () => {
+      controller.abort(); // Cleanup on unmount
+    };
+  }, []);
+
   return (
     <div
       style={{
+        padding: "10px",
         width: "100%",
-        height: "100vh", // Use the full viewport height
-        display: "flex",
-        flexDirection: "column",
+        height: "100%",
+        overflowY: "auto",
+        backgroundColor: "#121212",
+        color: "#ffffff",
+        fontFamily: "Arial, sans-serif",
       }}
     >
-      <iframe
-        src="https://github.com/ublue-os/bazzite/releases/" // Replace with your desired URL
-        style={{
-          flex: 1, // Ensures the iframe stretches to fill the parent container
-          width: "100%",
-          border: "none",
-        }}
-        title="WebPage Viewer"
-      ></iframe>
+      <h2>Bazzite Release Notes</h2>
+      {error ? (
+        <p style={{ color: "red" }} aria-live="polite">
+          {error}
+        </p>
+      ) : changelog ? (
+        <pre
+          style={{
+            whiteSpace: "pre-wrap",
+            wordWrap: "break-word",
+          }}
+        >
+          {changelog}
+        </pre>
+      ) : (
+        <p aria-live="polite">Loading...</p>
+      )}
     </div>
   );
 }
 
 export default definePlugin(() => {
   return {
-    name: "WebPage Viewer",
-    title: <div>WebPage Viewer</div>, // Title shown in Decky
-    icon: <FaGlobe />,                // Icon for the plugin
+    name: "Bazzite Changelog Viewer",
+    title: <div>Bazzite Changelog</div>,
+    icon: <FaClipboardList />,
     content: <Content />,
     onDismount() {},
   };
