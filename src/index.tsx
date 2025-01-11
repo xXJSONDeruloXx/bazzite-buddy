@@ -1,6 +1,8 @@
 import { definePlugin } from "decky-frontend-lib";
 import React, { useEffect, useState } from "react";
 import { FaClipboardList } from "react-icons/fa";
+import { marked } from "marked";
+import DOMPurify from "dompurify";
 
 function Content() {
   const [changelog, setChangelog] = useState<string | null>(null);
@@ -77,14 +79,50 @@ function Content() {
           {error}
         </p>
       ) : changelog ? (
-        <pre
+        <div
           style={{
-            whiteSpace: "pre-wrap",
-            wordWrap: "break-word",
+            backgroundColor: "#1e1e1e",
+            padding: "10px",
+            borderRadius: "5px",
+            color: "#ffffff",
+            fontFamily: "Arial, sans-serif",
+            fontSize: "14px",
+            lineHeight: "1.6",
           }}
         >
-          {changelog}
-        </pre>
+          <style>
+            {`
+              h1, h2, h3 {
+                color: #61dafb;
+                margin: 0 0 10px;
+              }
+              p {
+                margin: 0 0 10px;
+              }
+              ul, ol {
+                margin: 10px 0 10px 20px;
+              }
+              li {
+                margin: 5px 0;
+              }
+              pre {
+                background-color: #282c34;
+                padding: 10px;
+                border-radius: 5px;
+                overflow-x: auto;
+                color: #dcdcdc;
+              }
+              a {
+                color: #61dafb;
+                text-decoration: none;
+              }
+              a:hover {
+                text-decoration: underline;
+              }
+            `}
+          </style>
+          <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(marked(changelog)) }}></div>
+        </div>
       ) : (
         <p aria-live="polite">Loading...</p>
       )}
