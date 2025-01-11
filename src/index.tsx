@@ -3,18 +3,39 @@ import React, { useEffect, useState } from "react";
 import { FaClipboardList } from "react-icons/fa";
 import { marked } from "marked";
 import DOMPurify from "dompurify";
+import fs from "fs";
 
 function Content() {
+  const [version, setVersion] = useState<string | null>(null);
   const [changelog, setChangelog] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const url =
-      "https://api.github.com/repos/ublue-os/bazzite/releases/tags/41.20250106.2";
+  // Function to fetch version from the JSON file
+  const fetchVersion = () => {
+    const filePath = "/usr/share/ublue-os/image-info.json";
+
+    try {
+      if (fs.existsSync(filePath)) {
+        const data = fs.readFileSync(filePath, "utf8");
+        const json = JSON.parse(data);
+        setVersion(json.version); // Extract version
+      } else {
+        setError("Version info file not found.");
+      }
+    } catch (err) {
+      console.error("Error reading version info file:", err);
+      setError("Failed to read version info.");
+    }
+  };
+
+  // Function to fetch changelog based on version
+  const fetchChangelog = (version: string) => {
+    const url = `https://api.github.com/repos/ublue-os/bazzite/releases/tags/${version}`;
+
     const controller = new AbortController();
     const signal = controller.signal;
 
-    const fetchChangelog = async () => {
+    const getChangelog = async () => {
       try {
         const response = await fetch(url, {
           headers: {
@@ -39,12 +60,22 @@ function Content() {
       }
     };
 
-    fetchChangelog();
+    getChangelog();
 
     return () => {
       controller.abort(); // Cleanup on unmount
     };
+  };
+
+  useEffect(() => {
+    fetchVersion(); // Fetch version when component mounts
   }, []);
+
+  useEffect(() => {
+    if (version) {
+      fetchChangelog(version); // Fetch changelog after version is fetched
+    }
+  }, [version]);
 
   return (
     <div
@@ -70,7 +101,9 @@ function Content() {
           cursor: "pointer",
           fontSize: "16px",
         }}
-        onClick={() => window.open("https://github.com/ublue-os/bazzite/releases", "_blank")}
+        onClick={() =>
+          window.open("https://github.com/ublue-os/bazzite/releases", "_blank")
+        }
       >
         View All Release Notes
       </button>
@@ -121,7 +154,11 @@ function Content() {
               }
             `}
           </style>
-          <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(marked(changelog)) }}></div>
+          <div
+            dangerouslySetInnerHTML={{
+              __html: DOMPurify.sanitize(marked(changelog)),
+            }}
+          ></div>
         </div>
       ) : (
         <p aria-live="polite">Loading...</p>
