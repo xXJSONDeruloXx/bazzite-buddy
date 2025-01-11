@@ -7,7 +7,7 @@ import DOMPurify from "dompurify";
 function Content() {
   const [changelog, setChangelog] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [isRefreshing, setIsRefreshing] = useState<boolean>(false); // For button state feedback
+  const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
 
   const fetchChangelog = async (signal?: AbortSignal) => {
     const url =
@@ -26,7 +26,7 @@ function Content() {
 
       const data = await response.json();
       setChangelog(data.body);
-      setError(null); // Clear previous errors
+      setError(null);
     } catch (err) {
       if (err instanceof DOMException && err.name === "AbortError") return;
       const errorMessage =
@@ -42,19 +42,19 @@ function Content() {
     fetchChangelog(controller.signal);
 
     return () => {
-      controller.abort(); // Cleanup on unmount
+      controller.abort();
     };
   }, []);
 
   const refreshChangelog = async () => {
-    setIsRefreshing(true); // Start refresh animation or feedback
-    setChangelog(null); // Clear existing changelog to show loading
-    setError(null); // Clear any errors
+    setIsRefreshing(true);
+    setChangelog(null);
+    setError(null);
 
     try {
       await fetchChangelog();
     } finally {
-      setIsRefreshing(false); // End refresh animation
+      setIsRefreshing(false);
     }
   };
 
@@ -63,11 +63,15 @@ function Content() {
       style={{
         padding: "10px",
         width: "100%",
+        maxWidth: "800px", // Limit the width
+        margin: "0 auto", // Center the container
         height: "100%",
         overflowY: "auto",
         backgroundColor: "#121212",
         color: "#ffffff",
         fontFamily: "Arial, sans-serif",
+        wordWrap: "break-word", // Break long words
+        overflowX: "hidden", // Prevent horizontal scrolling
       }}
     >
       <h2>Bazzite Release Notes</h2>
@@ -102,7 +106,7 @@ function Content() {
             fontSize: "16px",
           }}
           onClick={refreshChangelog}
-          disabled={isRefreshing} // Disable while refreshing
+          disabled={isRefreshing}
         >
           {isRefreshing ? "Refreshing..." : "Refresh"}
         </button>
@@ -121,6 +125,7 @@ function Content() {
             fontFamily: "Arial, sans-serif",
             fontSize: "14px",
             lineHeight: "1.6",
+            wordWrap: "break-word", // Prevent long text from overflowing
           }}
         >
           <style>
