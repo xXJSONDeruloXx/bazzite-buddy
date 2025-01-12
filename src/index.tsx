@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { FaClipboardList } from "react-icons/fa";
 import { definePlugin } from "decky-frontend-lib";
 import { marked } from "marked";
@@ -8,6 +8,7 @@ function Content() {
   const [changelog, setChangelog] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
+  const changelogRef = useRef<HTMLDivElement | null>(null); // Reference to changelog div
 
   const fetchChangelog = async (signal?: AbortSignal) => {
     const url =
@@ -26,7 +27,7 @@ function Content() {
 
       const data = await response.json();
       setChangelog(data.body);
-      setError(null);
+      setError(null); // Clear previous errors
     } catch (err) {
       if (err instanceof DOMException && err.name === "AbortError") return;
       const errorMessage =
@@ -37,24 +38,38 @@ function Content() {
     }
   };
 
+  const handleGamepadScroll = (event: KeyboardEvent) => {
+    if (!changelogRef.current) return;
+
+    if (event.key === "ArrowDown") {
+      changelogRef.current.scrollBy({ top: 50, behavior: "smooth" });
+    } else if (event.key === "ArrowUp") {
+      changelogRef.current.scrollBy({ top: -50, behavior: "smooth" });
+    }
+  };
+
   useEffect(() => {
     const controller = new AbortController();
     fetchChangelog(controller.signal);
 
+    // Attach gamepad scroll listeners
+    window.addEventListener("keydown", handleGamepadScroll);
+
     return () => {
-      controller.abort();
+      controller.abort(); // Cleanup on unmount
+      window.removeEventListener("keydown", handleGamepadScroll);
     };
   }, []);
 
   const refreshChangelog = async () => {
-    setIsRefreshing(true);
-    setChangelog(null);
-    setError(null);
+    setIsRefreshing(true); // Start refresh animation or feedback
+    setChangelog(null); // Clear existing changelog to show loading
+    setError(null); // Clear any errors
 
     try {
       await fetchChangelog();
     } finally {
-      setIsRefreshing(false);
+      setIsRefreshing(false); // End refresh animation
     }
   };
 
@@ -92,6 +107,7 @@ function Content() {
               "_blank"
             )
           }
+          tabIndex={0} // Makes it focusable for gamepad
         >
           View All Release Notes
         </button>
@@ -106,7 +122,8 @@ function Content() {
             fontSize: "16px",
           }}
           onClick={refreshChangelog}
-          disabled={isRefreshing}
+          disabled={isRefreshing} // Disable while refreshing
+          tabIndex={0} // Makes it focusable for gamepad
         >
           {isRefreshing ? "Refreshing..." : "Refresh"}
         </button>
@@ -117,6 +134,7 @@ function Content() {
         </p>
       ) : changelog ? (
         <div
+          ref={changelogRef} // Attach ref for scrolling
           style={{
             backgroundColor: "#1e1e1e",
             padding: "10px",
@@ -125,6 +143,8 @@ function Content() {
             fontFamily: "Arial, sans-serif",
             fontSize: "14px",
             lineHeight: "1.6",
+            maxHeight: "300px", // Prevent overflow
+            overflowY: "auto", // Enable scrolling
             wordWrap: "break-word", // Prevent long text from overflowing
           }}
         >
