@@ -1,17 +1,20 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { FaClipboardList } from "react-icons/fa";
 import { definePlugin } from "decky-frontend-lib";
-import { marked } from "marked";
-import DOMPurify from "dompurify";
+import remarkHtml from "remark-html"
+import remarkParse from "remark-parse"
+import remarkGfm from "remark-gfm"
+import { unified } from "unified"
+import { patchPartnerEventStore } from "./PartnerEventStorePatch";
+import {staticClasses} from "@decky/ui";
 
 function Content() {
-  const [changelog, setChangelog] = useState<string | null>(null);
+  const [changelogHtml, setChangelogHtml] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
 
   const fetchChangelog = async (signal?: AbortSignal) => {
-    const url =
-      "https://api.github.com/repos/ublue-os/bazzite/releases/tags/41.20250106.2";
+    const url = "https://api.github.com/repos/ublue-os/bazzite/releases/latest";
     try {
       const response = await fetch(url, {
         headers: {
@@ -25,7 +28,13 @@ function Content() {
       }
 
       const data = await response.json();
-      setChangelog(data.body);
+      const html = await unified()
+            .use(remarkParse)
+            .use(remarkGfm)
+            .use(remarkHtml)
+            .process(data.body)
+
+      setChangelogHtml(html.value as string);
       setError(null);
     } catch (err) {
       if (err instanceof DOMException && err.name === "AbortError") return;
@@ -48,7 +57,7 @@ function Content() {
 
   const refreshChangelog = async () => {
     setIsRefreshing(true);
-    setChangelog(null);
+    setChangelogHtml(null);
     setError(null);
 
     try {
@@ -115,7 +124,7 @@ function Content() {
         <p style={{ color: "red" }} aria-live="polite">
           {error}
         </p>
-      ) : changelog ? (
+      ) : changelogHtml ? (
         <div
           style={{
             backgroundColor: "#1e1e1e",
@@ -161,7 +170,7 @@ function Content() {
           </style>
           <div
             dangerouslySetInnerHTML={{
-              __html: DOMPurify.sanitize(marked(changelog)),
+              __html: changelogHtml,
             }}
           ></div>
         </div>
@@ -173,11 +182,15 @@ function Content() {
 }
 
 export default definePlugin(() => {
+  const patch = patchPartnerEventStore();
+
   return {
     name: "Bazzite Changelog Viewer",
-    title: <div>Bazzite Changelog</div>,
+    title: <div className={staticClasses.Title}>Bazzite Buddy</div>,
     icon: <FaClipboardList />,
     content: <Content />,
-    onDismount() {},
+    onDismount() {
+      patch.unpatch();
+    },
   };
 });
