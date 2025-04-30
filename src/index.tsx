@@ -182,7 +182,7 @@ function Content() {
 }
 
 export default definePlugin(() => {
-  const patch = patchPartnerEventStore();
+  const patches = patchPartnerEventStore();
 
   return {
     name: "Bazzite Changelog Viewer",
@@ -190,7 +190,9 @@ export default definePlugin(() => {
     icon: <FaClipboardList />,
     content: <Content />,
     onDismount() {
-      patch.unpatch();
+      patches.forEach(patch => {
+        patch.unpatch();
+      });
     },
   };
 });

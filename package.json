@@ -1,6 +1,6 @@
 {
   "name": "bazzite-buddy",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "A plugin to easily view Bazzite changelogs within game mode, primarily for handhelds.",
   "type": "module",
   "scripts": {
