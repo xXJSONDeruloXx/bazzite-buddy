@@ -1,5 +1,5 @@
-import { findModuleExport, Patch } from "@decky/ui";
-import { replacePatch } from "decky-frontend-lib";
+import {findModuleExport, Patch} from "@decky/ui";
+import {replacePatch} from "decky-frontend-lib";
 import remarkHtml from "remark-html"
 import remarkParse from "remark-parse"
 import remarkGfm from "remark-gfm"
@@ -41,13 +41,13 @@ enum SteamEventType {
 }
 
 type SteamTags = {
-    require_tags?: string[]
+  require_tags?: string[]
 }
 
 enum SteamOSChannel {
-    Stable = "stablechannel",
-    Beta = "betachannel",
-    Preview =  "previewchannel",
+  Stable = "stablechannel",
+  Beta = "betachannel",
+  Preview = "previewchannel",
 }
 
 const mutex = new Mutex();
@@ -57,7 +57,7 @@ export function patchPartnerEventStore(): Patch[] {
   const loadAdjacentPartnerEventsPatch = replacePatch(
     PartnerEventStore.prototype,
     "LoadAdjacentPartnerEvents",
-    async function(args) {
+    async function (args) {
       let [gidEvent, gidAnnouncement, appId, countBefore, countAfter, tags, token] = args;
       const module = this;
 
@@ -74,7 +74,7 @@ export function patchPartnerEventStore(): Patch[] {
   const loadAdjacentPartnerEventsByAnnouncementPatch = replacePatch(
     PartnerEventStore.prototype,
     "LoadAdjacentPartnerEventsByAnnouncement",
-    async function(args) {
+    async function (args) {
       let [gidEvent, gidAnnouncement, appId, countBefore, countAfter, tags, token] = args;
       const module = this;
 
@@ -91,7 +91,7 @@ export function patchPartnerEventStore(): Patch[] {
   const loadAdjacentPartnerEventsByEventPatch = replacePatch(
     PartnerEventStore.prototype,
     "LoadAdjacentPartnerEventsByEvent",
-    async function(args) {
+    async function (args) {
       let [gidEvent, gidAnnouncement, appId, countBefore, countAfter, tags, token] = args;
       const module = this;
 
@@ -122,19 +122,19 @@ async function LoadBazziteReleasesAsPartnerEvents(module: any, gid: any, tags: S
   // InternalLoadAdjacentPartnerEvents minified code, gets announcement from cache if it exists
   if (module.m_mapAdjacentAnnouncementGIDs.has(gid)) {
     // noinspection JSPrimitiveTypeWrapperUsage
-      let e = module.m_mapAdjacentAnnouncementGIDs.get(gid)
+    let e = module.m_mapAdjacentAnnouncementGIDs.get(gid)
       , r = new Array;
     // noinspection CommaExpressionJS
-      if (e.forEach(((e: any) => {
+    if (e.forEach(((e: any) => {
         if (module.m_mapAnnouncementBodyToEvent.has(e)) {
-            let t = module.m_mapAnnouncementBodyToEvent.get(e);
-            ret.push(module.m_mapExistingEvents.get(t))
+          let t = module.m_mapAnnouncementBodyToEvent.get(e);
+          ret.push(module.m_mapExistingEvents.get(t))
         } else
-            r.push(e)
-    }
+          r.push(e)
+      }
     )),
     r.length > 0) {
-        (await module.LoadBatchPartnerEventsByEventGIDsOrAnnouncementGIDs(null, r, tags)).forEach(((e: any) => ret.push(e)))
+      (await module.LoadBatchPartnerEventsByEventGIDsOrAnnouncementGIDs(null, r, tags)).forEach(((e: any) => ret.push(e)))
     }
   }
 
@@ -156,7 +156,7 @@ async function LoadBazziteReleasesAsPartnerEvents(module: any, gid: any, tags: S
     releases = cachedGithubReleases.slice(Math.max(releaseIndex - countBefore + 1, 0), releaseIndex + countAfter + 1);
   }
 
-  for (const { release } of releases) {
+  for (const {release} of releases) {
     const releasePublishedAt = Math.floor((new Date(release.published_at)).getTime() / 1000);
 
     const html = await unified()
@@ -186,26 +186,26 @@ async function LoadBazziteReleasesAsPartnerEvents(module: any, gid: any, tags: S
       "event_notes": "see announcement body",
       "jsondata": "",
       "announcement_body": {
-          "gid": String(release.id),
-          "clanid": steamClanID,
-          "posterid": "0",
-          "headline": `Bazzite ${release.tag_name}`,
-          "posttime": releasePublishedAt,
-          "updatetime": releasePublishedAt,
-          "body": bbcode.toString(),
-          "commentcount": 0,
-          "tags": [
-              "patchnotes",
-              isBetaOrPreviewChannel(tags) ? SteamOSChannel.Beta : SteamOSChannel.Stable,
-          ],
-          "language": 0,
-          "hidden": 0,
-          "forum_topic_id": "0",
-          "event_gid": "0",
-          "voteupcount": 0,
-          "votedowncount": 0,
-          "ban_check_result": 0,
-          "banned": 0
+        "gid": String(release.id),
+        "clanid": steamClanID,
+        "posterid": "0",
+        "headline": `Bazzite ${release.tag_name}`,
+        "posttime": releasePublishedAt,
+        "updatetime": releasePublishedAt,
+        "body": bbcode.toString(),
+        "commentcount": 0,
+        "tags": [
+          "patchnotes",
+          isBetaOrPreviewChannel(tags) ? SteamOSChannel.Beta : SteamOSChannel.Stable,
+        ],
+        "language": 0,
+        "hidden": 0,
+        "forum_topic_id": "0",
+        "event_gid": "0",
+        "voteupcount": 0,
+        "votedowncount": 0,
+        "ban_check_result": 0,
+        "banned": 0
       },
       "published": 1,
       "hidden": 0,
@@ -252,51 +252,50 @@ async function fetchMoreReleases(count: number, beta: boolean) {
 
     if ((beta && release.prerelease) || (!beta && !release.prerelease))
       releases.push(release);
-    } while (releases.length < count && !iterator.done)
+  } while (releases.length < count && !iterator.done)
 
   for (const release of releases) {
-    cachedGithubReleases.push({ gid: String(release.id), release });
+    cachedGithubReleases.push({gid: String(release.id), release});
   }
 }
 
 async function* fetchReleases() {
-    let currentPage = 1;
-    let done = false;
+  let currentPage = 1;
+  let done = false;
 
-    while (!done) {
-        let response: Response;
-        let responseJson: any;
+  while (!done) {
+    let response: Response;
+    let responseJson: any;
 
-        try {
-            response = await fetch(githubReleasesURI + `?page=${currentPage++}&per_page=10`);
+    try {
+      response = await fetch(githubReleasesURI + `?page=${currentPage++}&per_page=10`);
 
-            if (response.ok) {
-                responseJson = await response.json();
-            } else {
-                responseJson = [];
-            }
-        }
-        catch {
-            responseJson = [];
-        }
-
-        if (!Array.isArray(responseJson) || responseJson.length == 0) {
-            done = true;
-        } else {
-            responseJson.sort((a, b) => (new Date(b.created_at)).getTime() - (new Date(a.created_at)).getTime());
-
-            for (let release of responseJson) {
-                yield release;
-            }
-        }
+      if (response.ok) {
+        responseJson = await response.json();
+      } else {
+        responseJson = [];
+      }
+    } catch {
+      responseJson = [];
     }
 
-    return undefined;
+    if (!Array.isArray(responseJson) || responseJson.length == 0) {
+      done = true;
+    } else {
+      responseJson.sort((a, b) => (new Date(b.created_at)).getTime() - (new Date(a.created_at)).getTime());
+
+      for (let release of responseJson) {
+        yield release;
+      }
+    }
+  }
+
+  return undefined;
 }
 
 function isBetaOrPreviewChannel(tags: SteamTags): boolean {
-    return (tags?.require_tags
-            && (tags?.require_tags?.includes(SteamOSChannel.Beta)
-                || tags?.require_tags?.includes(SteamOSChannel.Preview)))
-        ?? false;
+  return (tags?.require_tags
+      && (tags?.require_tags?.includes(SteamOSChannel.Beta)
+        || tags?.require_tags?.includes(SteamOSChannel.Preview)))
+    ?? false;
 }

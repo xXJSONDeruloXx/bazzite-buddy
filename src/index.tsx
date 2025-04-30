@@ -1,11 +1,11 @@
-import { useEffect, useState } from "react";
-import { FaClipboardList } from "react-icons/fa";
-import { definePlugin } from "decky-frontend-lib";
+import {useEffect, useState} from "react";
+import {FaClipboardList} from "react-icons/fa";
+import {definePlugin} from "decky-frontend-lib";
 import remarkHtml from "remark-html"
 import remarkParse from "remark-parse"
 import remarkGfm from "remark-gfm"
-import { unified } from "unified"
-import { patchPartnerEventStore } from "./PartnerEventStorePatch";
+import {unified} from "unified"
+import {patchPartnerEventStore} from "./PartnerEventStorePatch";
 import {staticClasses} from "@decky/ui";
 
 function Content() {
@@ -29,10 +29,10 @@ function Content() {
 
       const data = await response.json();
       const html = await unified()
-            .use(remarkParse)
-            .use(remarkGfm)
-            .use(remarkHtml)
-            .process(data.body)
+        .use(remarkParse)
+        .use(remarkGfm)
+        .use(remarkHtml)
+        .process(data.body)
 
       setChangelogHtml(html.value as string);
       setError(null);
@@ -84,7 +84,7 @@ function Content() {
       }}
     >
       <h2>Bazzite Release Notes</h2>
-      <div style={{ display: "flex", gap: "10px", marginBottom: "15px" }}>
+      <div style={{display: "flex", gap: "10px", marginBottom: "15px"}}>
         <button
           style={{
             padding: "10px 20px",
@@ -121,7 +121,7 @@ function Content() {
         </button>
       </div>
       {error ? (
-        <p style={{ color: "red" }} aria-live="polite">
+        <p style={{color: "red"}} aria-live="polite">
           {error}
         </p>
       ) : changelogHtml ? (
@@ -187,8 +187,8 @@ export default definePlugin(() => {
   return {
     name: "Bazzite Changelog Viewer",
     title: <div className={staticClasses.Title}>Bazzite Buddy</div>,
-    icon: <FaClipboardList />,
-    content: <Content />,
+    icon: <FaClipboardList/>,
+    content: <Content/>,
     onDismount() {
       patches.forEach(patch => {
         patch.unpatch();
