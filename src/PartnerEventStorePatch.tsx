@@ -32,7 +32,9 @@ const steamClanSteamID = "103582791470414830";
 const steamClanID = "40893422";
 const steamOSAppId = 1675200;
 const githubReleasesURI = "https://api.github.com/repos/ublue-os/bazzite/releases";
-const generator = fetchReleases();
+let generator: AsyncGenerator<any, undefined, unknown>;
+const mutex = new Mutex();
+const cachedGithubReleases: { gid: string, release: any }[] = [];
 
 enum SteamEventType {
   SmallUpdate = 12,
@@ -49,9 +51,6 @@ enum SteamOSChannel {
   Beta = "betachannel",
   Preview = "previewchannel",
 }
-
-const mutex = new Mutex();
-const cachedGithubReleases: { gid: string, release: any }[] = [];
 
 export function patchPartnerEventStore(): Patch[] {
   const loadAdjacentPartnerEventsPatch = replacePatch(
@@ -244,13 +243,17 @@ async function LoadBazziteReleasesAsPartnerEvents(module: any, gid: any, tags: S
 
 async function fetchMoreReleases(count: number, beta: boolean) {
   const releases = [];
+
+  if (!generator && cachedGithubReleases.length === 0)
+    generator = fetchReleases();
+
   let iterator;
 
   do {
     iterator = await generator.next();
     const release = iterator.value;
 
-    if ((beta && release.prerelease) || (!beta && !release.prerelease))
+    if (release && ((beta && release.prerelease) || (!beta && !release.prerelease)))
       releases.push(release);
   } while (releases.length < count && !iterator.done)
 
