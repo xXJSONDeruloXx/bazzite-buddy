@@ -297,8 +297,9 @@ async function* fetchReleases() {
 }
 
 function isBetaOrPreviewChannel(tags: SteamTags): boolean {
-  return (tags?.require_tags
-      && (tags?.require_tags?.includes(SteamOSChannel.Beta)
-        || tags?.require_tags?.includes(SteamOSChannel.Preview)))
-    ?? false;
+  if (!tags?.require_tags)
+    return false;
+
+  return tags.require_tags.includes(SteamOSChannel.Beta)
+    || tags.require_tags.includes(SteamOSChannel.Preview);
 }
