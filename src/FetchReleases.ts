@@ -8,8 +8,7 @@ export async function isBazziteBranchTesting() {
 }
 
 export async function* fetchReleases(signal?: AbortSignal) {
-  const branch = await getBazziteBranch();
-  const testing = branch === "stable";
+  const testing = await isBazziteBranchTesting();
   let currentPage = 1;
   let done = false;
 
