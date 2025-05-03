@@ -6,6 +6,7 @@ import remarkGfm from "remark-gfm"
 import {unified} from "unified"
 import html2bbcode from "./html2bbcode";
 import {Mutex} from 'async-mutex';
+import {fetchReleases, isBazziteBranchTesting} from "./FetchReleases";
 
 const PartnerEventStore = findModuleExport(
   (e) => e?.prototype?.InternalLoadAdjacentPartnerEvents
@@ -31,15 +32,14 @@ const SteamID = findModuleExport(
 const steamClanSteamID = "103582791470414830";
 const steamClanID = "40893422";
 const steamOSAppId = 1675200;
-const githubReleasesURI = "https://api.github.com/repos/ublue-os/bazzite/releases";
 let generator: AsyncGenerator<any, undefined, unknown>;
 const mutex = new Mutex();
 const cachedGithubReleases: { gid: string, release: any }[] = [];
 
 enum SteamEventType {
-  SmallUpdate = 12,
+  // SmallUpdate = 12,
   Update = 13,
-  BigUpdate = 14,
+  // BigUpdate = 14,
 }
 
 type SteamTags = {
@@ -49,7 +49,7 @@ type SteamTags = {
 enum SteamOSChannel {
   Stable = "stablechannel",
   Beta = "betachannel",
-  Preview = "previewchannel",
+  // Preview = "previewchannel",
 }
 
 export function patchPartnerEventStore(): Patch[] {
@@ -138,7 +138,7 @@ async function LoadBazziteReleasesAsPartnerEvents(module: any, gid: any, tags: S
   }
 
   if (cachedGithubReleases.length === 0) {
-    await fetchMoreReleases(countAfter, isBetaOrPreviewChannel(tags));
+    await fetchMoreReleases(countAfter);
   }
 
   const releaseIndex = gid ? cachedGithubReleases.findIndex((e: any) => e.gid === gid) : -1;
@@ -149,7 +149,7 @@ async function LoadBazziteReleasesAsPartnerEvents(module: any, gid: any, tags: S
   } else {
     if (releaseIndex + countAfter + 1 > cachedGithubReleases.length) {
       const toFetch = releaseIndex + countAfter + 1 - cachedGithubReleases.length;
-      await fetchMoreReleases(toFetch, isBetaOrPreviewChannel(tags));
+      await fetchMoreReleases(toFetch);
     }
 
     releases = cachedGithubReleases.slice(Math.max(releaseIndex - countBefore + 1, 0), releaseIndex + countAfter + 1);
@@ -195,7 +195,7 @@ async function LoadBazziteReleasesAsPartnerEvents(module: any, gid: any, tags: S
         "commentcount": 0,
         "tags": [
           "patchnotes",
-          isBetaOrPreviewChannel(tags) ? SteamOSChannel.Beta : SteamOSChannel.Stable,
+          (await isBazziteBranchTesting()) ? SteamOSChannel.Beta : SteamOSChannel.Stable,
         ],
         "language": 0,
         "hidden": 0,
@@ -241,7 +241,7 @@ async function LoadBazziteReleasesAsPartnerEvents(module: any, gid: any, tags: S
   return ret;
 }
 
-async function fetchMoreReleases(count: number, beta: boolean) {
+async function fetchMoreReleases(count: number) {
   const releases = [];
 
   if (!generator && cachedGithubReleases.length === 0)
@@ -252,54 +252,10 @@ async function fetchMoreReleases(count: number, beta: boolean) {
   do {
     iterator = await generator.next();
     const release = iterator.value;
-
-    if (release && ((beta && release.prerelease) || (!beta && !release.prerelease)))
-      releases.push(release);
+    releases.push(release);
   } while (releases.length < count && !iterator.done)
 
   for (const release of releases) {
     cachedGithubReleases.push({gid: String(release.id), release});
   }
-}
-
-async function* fetchReleases() {
-  let currentPage = 1;
-  let done = false;
-
-  while (!done) {
-    let response: Response;
-    let responseJson: any;
-
-    try {
-      response = await fetch(githubReleasesURI + `?page=${currentPage++}&per_page=10`);
-
-      if (response.ok) {
-        responseJson = await response.json();
-      } else {
-        responseJson = [];
-      }
-    } catch {
-      responseJson = [];
-    }
-
-    if (!Array.isArray(responseJson) || responseJson.length == 0) {
-      done = true;
-    } else {
-      responseJson.sort((a, b) => (new Date(b.created_at)).getTime() - (new Date(a.created_at)).getTime());
-
-      for (let release of responseJson) {
-        yield release;
-      }
-    }
-  }
-
-  return undefined;
-}
-
-function isBetaOrPreviewChannel(tags: SteamTags): boolean {
-  if (!tags?.require_tags)
-    return false;
-
-  return tags.require_tags.includes(SteamOSChannel.Beta)
-    || tags.require_tags.includes(SteamOSChannel.Preview);
 }
