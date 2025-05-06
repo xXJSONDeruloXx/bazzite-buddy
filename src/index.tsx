@@ -1,12 +1,13 @@
-import { useEffect, useState } from "react";
-import { FaClipboardList } from "react-icons/fa";
-import { definePlugin } from "decky-frontend-lib";
+import {useEffect, useState} from "react";
+import {FaClipboardList} from "react-icons/fa";
 import remarkHtml from "remark-html"
 import remarkParse from "remark-parse"
 import remarkGfm from "remark-gfm"
-import { unified } from "unified"
-import { patchPartnerEventStore } from "./PartnerEventStorePatch";
+import {unified} from "unified"
+import {patchPartnerEventStore} from "./PartnerEventStorePatch";
 import {staticClasses} from "@decky/ui";
+import {definePlugin} from "@decky/api"
+import {fetchReleases} from "./FetchReleases";
 
 function Content() {
   const [changelogHtml, setChangelogHtml] = useState<string | null>(null);
@@ -14,25 +15,20 @@ function Content() {
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
 
   const fetchChangelog = async (signal?: AbortSignal) => {
-    const url = "https://api.github.com/repos/ublue-os/bazzite/releases/latest";
     try {
-      const response = await fetch(url, {
-        headers: {
-          Accept: "application/vnd.github.v3+json",
-        },
-        signal,
-      });
+      const generator = fetchReleases(signal);
+      const iterator = await generator.next();
 
-      if (!response.ok) {
-        throw new Error(`Failed to fetch: ${response.statusText}`);
+      if (!iterator || iterator.done) {
+        setError("An unknown error occurred while fetching the changelog.");
+        return;
       }
 
-      const data = await response.json();
       const html = await unified()
-            .use(remarkParse)
-            .use(remarkGfm)
-            .use(remarkHtml)
-            .process(data.body)
+        .use(remarkParse)
+        .use(remarkGfm)
+        .use(remarkHtml)
+        .process(iterator.value.body);
 
       setChangelogHtml(html.value as string);
       setError(null);
@@ -84,7 +80,7 @@ function Content() {
       }}
     >
       <h2>Bazzite Release Notes</h2>
-      <div style={{ display: "flex", gap: "10px", marginBottom: "15px" }}>
+      <div style={{display: "flex", gap: "10px", marginBottom: "15px"}}>
         <button
           style={{
             padding: "10px 20px",
@@ -121,7 +117,7 @@ function Content() {
         </button>
       </div>
       {error ? (
-        <p style={{ color: "red" }} aria-live="polite">
+        <p style={{color: "red"}} aria-live="polite">
           {error}
         </p>
       ) : changelogHtml ? (
@@ -181,16 +177,19 @@ function Content() {
   );
 }
 
+// noinspection JSUnusedGlobalSymbols
 export default definePlugin(() => {
-  const patch = patchPartnerEventStore();
+  const patches = patchPartnerEventStore();
 
   return {
     name: "Bazzite Changelog Viewer",
     title: <div className={staticClasses.Title}>Bazzite Buddy</div>,
-    icon: <FaClipboardList />,
-    content: <Content />,
+    icon: <FaClipboardList/>,
+    content: <Content/>,
     onDismount() {
-      patch.unpatch();
+      patches.forEach(patch => {
+        patch.unpatch();
+      });
     },
   };
 });
